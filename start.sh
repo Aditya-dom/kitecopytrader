@@ -16,7 +16,7 @@ echo "SUCCESS: Python 3 found"
 
 # Check current directory
 if [ ! -f "main.py" ]; then
-    echo "ERROR: Please run this script from the zerodha-copy-trader directory"
+    echo "ERROR: Please run this script from the kitecopytrader directory"
     exit 1
 fi
 

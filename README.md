@@ -3,12 +3,6 @@
 
 **CRITICAL DISCLAIMER - READ CAREFULLY**
 
-**Financial Risks:**
-- This system can result in substantial financial losses
-- Market volatility can amplify losses across multiple accounts  
-- No guarantee of profit or loss prevention
-- You are fully responsible for all trades and their consequences
-
 **Security Risks:**
 - API credentials provide full access to your trading accounts
 - Improper handling can lead to unauthorized access
@@ -65,7 +59,7 @@
 ### 1. Automated Setup (Recommended)
 
 ```bash
-cd /Users/yourfoldername/Desktop/zerodha-copy-trader
+cd /Users/yourfoldername/Desktop/kitecopytrader
 python setup.py
 ```
 
@@ -112,7 +106,7 @@ python main.py
 ## File Structure
 
 ```
-zerodha-copy-trader/
+kitecopytrader/
 ├── main.py              # Main system controller
 ├── config.py            # Secure configuration management
 ├── master_client.py     # Master account WebSocket client
@@ -407,14 +401,6 @@ class DatabaseLogger:
 
 ---
 
-## Regulatory Compliance
-
-### SEBI Guidelines
-- **Investment Advisory Registration**: May be required for managing others' funds
-- **Risk Disclosure**: Proper risk warnings to clients
-- **Audit Trail**: Maintain detailed records of all trades
-- **Client Agreements**: Written agreements with fund providers
-
 ### Documentation Requirements
 - **Trade Records**: All executed trades with timestamps
 - **System Logs**: Complete audit trail
@@ -551,9 +537,9 @@ scp backup_*.tar.gz user@backup-server:/secure/backups/
 
 **You now have a complete, production-ready Zerodha copy trading system on your desktop!**
 
-**Location**: `/Users/yourfoldername/Desktop/zerodha-copy-trader/`
+**Location**: `/Users/yourfoldername/Desktop/kitecopytrader/`
 
 **Next Steps**: 
-1. `cd /Users/yourfoldername/Desktop/zerodha-copy-trader`
+1. `cd /Users/yourfoldername/Desktop/kitecopytrader`
 2. `python setup.py` (for guided setup)
 3. `python main.py` (to start trading)

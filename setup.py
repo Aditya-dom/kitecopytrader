@@ -26,11 +26,10 @@ def print_disclaimer():
     print("- This system involves real money trading")
     print("- Test thoroughly with paper trading first") 
     print("- You are responsible for all trades and losses")
-    print("- Ensure compliance with SEBI regulations")
     print()
     
-    response = input("Do you understand and accept these risks? (yes/no): ")
-    if response.lower() != 'yes':
+    response = input("Do you understand and accept these risks? (y/yes/n/no): ")
+    if response.lower() not in ['y', 'yes']:
         print("Setup cancelled for safety.")
         sys.exit(1)
 

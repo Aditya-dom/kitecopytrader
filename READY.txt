@@ -1,7 +1,7 @@
 ZERODHA COPY TRADING SYSTEM - READY TO USE!
 =====================================================
 
-**Location**: /Users/yourfoldername/Desktop/zerodha-copy-trader/
+**Location**: /Users/yourfoldername/Desktop/kitecopytrader/
 
 **Files Created**:
 - main.py              (Main system controller)
@@ -19,7 +19,7 @@ ZERODHA COPY TRADING SYSTEM - READY TO USE!
 **QUICK START GUIDE**:
 
 1. **Navigate to Directory**:
-   cd /Users/yourfoldername/Desktop/zerodha-copy-trader
+   cd /Users/yourfoldername/Desktop/kitecopytrader
 
 2. **Easy Setup** (Recommended):
    python3 setup.py
@@ -49,13 +49,6 @@ ZERODHA COPY TRADING SYSTEM - READY TO USE!
 - SUCCESS: Comprehensive logging and monitoring
 - SUCCESS: Market hours validation
 - SUCCESS: Rate limiting and retry logic
-
-**SAFETY FIRST**:
-- Paper trading enabled by default
-- Test thoroughly before real money
-- Read all disclaimers in README.md
-- Ensure SEBI compliance
-- Start with small quantities
 
 **DAILY MAINTENANCE**:
 - Access tokens expire daily
