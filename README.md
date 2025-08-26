@@ -19,6 +19,29 @@
 
 ## Features
 
+### Multi-Segment Trading Support
+- **NSE Equity** - National Stock Exchange equities
+- **BSE Equity** - Bombay Stock Exchange equities  
+- **NFO (F&O)** - NSE Futures & Options
+- **MCX** - Multi Commodity Exchange (Commodities)
+- **BFO** - BSE Futures & Options
+- **CDS** - Currency Derivatives Segment
+- Segment-specific multipliers and position limits
+- Individual risk management per trading segment
+- Commodity-specific risk controls (Gold, Silver, Crude Oil, etc.)
+- Options trading with enhanced risk management
+
+### 📱 Smart Notification System
+- **WhatsApp notifications** via Twilio API
+- **Telegram alerts** with real-time trade updates
+- **Email notifications** for audit trail
+- **Discord webhooks** for team coordination
+- **Real-time trade alerts** with full details
+- **System health monitoring** with alerts
+- **Daily trading summaries** at market close
+- **Multi-segment trade breakdown** in notifications
+- **Follower performance tracking** with success rates
+
 ### Real-Time Trade Replication
 - WebSocket-based real-time order monitoring
 - Instant trade detection and replication
@@ -140,6 +163,25 @@ FOLLOWER_1_USER_ID=your_follower_1_user_id
 FOLLOWER_1_MULTIPLIER=1.0
 FOLLOWER_1_MAX_POSITION=1000
 FOLLOWER_1_ENABLED=True
+
+# Multi-Segment Configuration for Follower 1
+FOLLOWER_1_ENABLED_SEGMENTS=NSE,BSE,NFO,MCX,BFO,CDS
+
+# Segment-Specific Multipliers
+FOLLOWER_1_NSE_MULTIPLIER=1.0      # NSE Equity
+FOLLOWER_1_BSE_MULTIPLIER=1.0      # BSE Equity
+FOLLOWER_1_NFO_MULTIPLIER=0.5      # F&O (lower due to leverage)
+FOLLOWER_1_MCX_MULTIPLIER=0.2      # Commodities (much lower)
+FOLLOWER_1_BFO_MULTIPLIER=0.5      # BSE F&O
+FOLLOWER_1_CDS_MULTIPLIER=1.0      # Currency
+
+# Segment-Specific Position Limits
+FOLLOWER_1_NSE_LIMIT=1000          # NSE Equity limit
+FOLLOWER_1_BSE_LIMIT=1000          # BSE Equity limit
+FOLLOWER_1_NFO_LIMIT=500           # F&O limit
+FOLLOWER_1_MCX_LIMIT=200           # Commodity limit
+FOLLOWER_1_BFO_LIMIT=500           # BSE F&O limit
+FOLLOWER_1_CDS_LIMIT=1000          # Currency limit
 
 # System Settings
 PAPER_TRADING=True  # KEEP TRUE FOR TESTING!

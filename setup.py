@@ -129,6 +129,41 @@ def setup_follower_accounts():
         multiplier = float(input(f"Enter quantity multiplier for {auth_data['user_name']} (default 1.0): ") or "1.0")
         max_position = int(input(f"Enter maximum position size for {auth_data['user_name']} (default 1000): ") or "1000")
         
+        # Ask about segment-specific configuration
+        print(f"\n--- Segment Configuration for {auth_data['user_name']} ---")
+        print("Available segments: NSE, BSE, NFO (F&O), MCX (Commodity), BFO (BSE F&O), CDS (Currency)")
+        
+        segments_input = input("Enter enabled segments (comma-separated, default: all): ").strip()
+        if segments_input:
+            enabled_segments = [seg.strip().upper() for seg in segments_input.split(',')]
+        else:
+            enabled_segments = ['NSE', 'BSE', 'NFO', 'MCX', 'BFO', 'CDS']
+        
+        # Segment-specific multipliers
+        segment_multipliers = {}
+        segment_limits = {}
+        
+        print("\n--- Segment-Specific Settings (press Enter to use defaults) ---")
+        segment_defaults = {
+            'NSE': {'mult': 1.0, 'limit': 1000},
+            'BSE': {'mult': 1.0, 'limit': 1000},
+            'NFO': {'mult': 0.5, 'limit': 500},   # F&O: lower due to leverage
+            'MCX': {'mult': 0.2, 'limit': 200},   # Commodities: much lower due to high value
+            'BFO': {'mult': 0.5, 'limit': 500},   # BSE F&O
+            'CDS': {'mult': 1.0, 'limit': 1000}   # Currency
+        }
+        
+        for segment in enabled_segments:
+            if segment in segment_defaults:
+                default_mult = segment_defaults[segment]['mult']
+                default_limit = segment_defaults[segment]['limit']
+                
+                mult_input = input(f"{segment} multiplier (default {default_mult}): ")
+                limit_input = input(f"{segment} position limit (default {default_limit}): ")
+                
+                segment_multipliers[segment] = float(mult_input) if mult_input else default_mult
+                segment_limits[segment] = int(limit_input) if limit_input else default_limit
+        
         follower = {
             'api_key': api_key,
             'api_secret': api_secret,
@@ -137,7 +172,10 @@ def setup_follower_accounts():
             'user_name': auth_data['user_name'],
             'multiplier': multiplier,
             'max_position_size': max_position,
-            'enabled': True
+            'enabled': True,
+            'enabled_segments': enabled_segments,
+            'segment_multipliers': segment_multipliers,
+            'segment_limits': segment_limits
         }
         
         followers.append(follower)
@@ -181,7 +219,21 @@ def create_env_file(master_config, follower_configs, use_encryption=False):
         env_content += f"FOLLOWER_{i}_USER_ID={follower['user_id']}\n"
         env_content += f"FOLLOWER_{i}_MULTIPLIER={follower['multiplier']}\n"
         env_content += f"FOLLOWER_{i}_MAX_POSITION={follower['max_position_size']}\n"
-        env_content += f"FOLLOWER_{i}_ENABLED={follower['enabled']}\n\n"
+        env_content += f"FOLLOWER_{i}_ENABLED={follower['enabled']}\n"
+        
+        # Add segment-specific configuration
+        if 'enabled_segments' in follower:
+            env_content += f"FOLLOWER_{i}_ENABLED_SEGMENTS={",".join(follower['enabled_segments'])}\n"
+        
+        if 'segment_multipliers' in follower:
+            for segment, multiplier in follower['segment_multipliers'].items():
+                env_content += f"FOLLOWER_{i}_{segment}_MULTIPLIER={multiplier}\n"
+        
+        if 'segment_limits' in follower:
+            for segment, limit in follower['segment_limits'].items():
+                env_content += f"FOLLOWER_{i}_{segment}_LIMIT={limit}\n"
+        
+        env_content += "\n"
     
     # System configuration
     env_content += "# System Configuration\n"

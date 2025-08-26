@@ -11,6 +11,7 @@ from datetime import datetime, time as dt_time
 from config import SecureConfigManager, setup_logging, AccountConfig
 from master_client import MasterAccountClient  
 from follower_client import FollowerAccountClient
+from notifications import NotificationManager, load_notification_config
 
 logger = logging.getLogger(__name__)
 
@@ -34,12 +35,20 @@ class CopyTradingSystem:
         self.master_client = None
         self.follower_clients: List[FollowerAccountClient] = []
         
+        # Initialize notification system
+        self.notification_config = load_notification_config()
+        self.notification_manager = NotificationManager(self.notification_config)
+        
         # System state
         self.is_running = False
         self.start_time = None
         self.total_trades_processed = 0
         self.successful_replications = 0
         self.failed_replications = 0
+        self.daily_stats = {
+            'segment_breakdown': {},
+            'follower_performance': {}
+        }
         
         # Threading
         self.monitor_thread = None
@@ -110,28 +119,76 @@ class CopyTradingSystem:
         return all(field.strip() for field in required_fields)
     
     def _on_master_trade(self, trade_data: Dict[str, Any]):
-        """Handle trades from master account"""
+        """Handle trades from master account with comprehensive notifications"""
         try:
-            logger.info(f"Processing master trade: {trade_data}")
+            exchange = trade_data.get('exchange', 'NSE')
+            symbol = trade_data.get('tradingsymbol', 'UNKNOWN')
+            logger.info(f"Processing master trade: {exchange} {symbol} - {trade_data}")
             self.total_trades_processed += 1
+            
+            # Update segment breakdown
+            self.daily_stats['segment_breakdown'][exchange] = self.daily_stats['segment_breakdown'].get(exchange, 0) + 1
             
             # Check if trading is allowed (market hours, system status, etc.)
             if not self._is_trading_allowed():
                 logger.warning("Trading is not allowed at this time")
+                self.notification_manager.send_system_alert(
+                    "Trading Blocked",
+                    f"Trade blocked for {symbol} - Outside market hours or paper trading mode",
+                    "WARNING"
+                )
                 return
+            
+            # Track results for notification
+            follower_results = []
             
             # Replicate trade to all follower accounts
             successful_count = 0
             for follower_client in self.follower_clients:
+                follower_id = follower_client.config.user_id
+                
+                # Initialize follower stats if not exists
+                if follower_id not in self.daily_stats['follower_performance']:
+                    self.daily_stats['follower_performance'][follower_id] = {'successful': 0, 'total': 0}
+                
+                self.daily_stats['follower_performance'][follower_id]['total'] += 1
+                
                 try:
+                    # Calculate what quantity would be replicated
+                    segment_multiplier = follower_client.config.segment_multipliers.get(exchange, follower_client.config.multiplier)
+                    replicated_qty = int(trade_data['quantity'] * segment_multiplier)
+                    
                     if follower_client.replicate_trade(trade_data):
                         successful_count += 1
-                        logger.info(f"Trade replicated successfully to {follower_client.config.user_id}")
+                        self.daily_stats['follower_performance'][follower_id]['successful'] += 1
+                        
+                        follower_results.append({
+                            'user_id': follower_id,
+                            'success': True,
+                            'replicated_quantity': replicated_qty,
+                            'error': ''
+                        })
+                        
+                        logger.info(f"Trade replicated successfully to {follower_id}")
                     else:
-                        logger.error(f"Failed to replicate trade to {follower_client.config.user_id}")
+                        follower_results.append({
+                            'user_id': follower_id,
+                            'success': False,
+                            'replicated_quantity': 0,
+                            'error': 'Order placement failed'
+                        })
+                        
+                        logger.error(f"Failed to replicate trade to {follower_id}")
                         
                 except Exception as e:
-                    logger.error(f"Error replicating trade to {follower_client.config.user_id}: {e}")
+                    follower_results.append({
+                        'user_id': follower_id,
+                        'success': False,
+                        'replicated_quantity': 0,
+                        'error': str(e)
+                    })
+                    
+                    logger.error(f"Error replicating trade to {follower_id}: {e}")
             
             # Update statistics
             if successful_count == len(self.follower_clients):
@@ -140,10 +197,29 @@ class CopyTradingSystem:
             else:
                 self.failed_replications += 1
                 logger.warning(f"Trade replicated to only {successful_count}/{len(self.follower_clients)} followers")
+            
+            # Send comprehensive notification
+            self.notification_manager.send_trade_notification(trade_data, follower_results)
+            
+            # Send alert if some followers failed
+            if successful_count < len(self.follower_clients):
+                failed_count = len(self.follower_clients) - successful_count
+                self.notification_manager.send_system_alert(
+                    "Partial Replication Failure",
+                    f"Trade for {symbol} failed on {failed_count} follower account(s). Check logs for details.",
+                    "WARNING"
+                )
                 
         except Exception as e:
             logger.error(f"Error processing master trade: {e}")
             self.failed_replications += 1
+            
+            # Send error notification
+            self.notification_manager.send_system_alert(
+                "Trade Processing Error",
+                f"Critical error processing trade: {str(e)}",
+                "ERROR"
+            )
     
     def _is_trading_allowed(self) -> bool:
         """Check if trading is currently allowed"""
@@ -201,6 +277,20 @@ class CopyTradingSystem:
             logger.info(f"Follower accounts: {len(self.follower_clients)}")
             logger.info(f"Paper trading mode: {self.system_config['paper_trading']}")
             
+            # Send system startup notification
+            startup_message = f"Copy Trading System Started\n\n"
+            startup_message += f"Master: {self.master_client.config.user_id}\n"
+            startup_message += f"Followers: {len(self.follower_clients)}\n"
+            startup_message += f"Paper Trading: {self.system_config['paper_trading']}\n"
+            startup_message += f"Segments: All enabled\n"
+            startup_message += f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+            
+            self.notification_manager.send_system_alert(
+                "System Started",
+                startup_message,
+                "INFO"
+            )
+            
             return True
             
         except Exception as e:
@@ -209,11 +299,16 @@ class CopyTradingSystem:
             return False
     
     def _system_monitor(self):
-        """Monitor system health and performance"""
+        """Monitor system health and performance with notifications"""
+        last_summary_day = None
+        
         while self.is_running and not self.shutdown_event.is_set():
             try:
+                current_time = time.time()
+                current_date = datetime.now().date()
+                
                 # Log system status every 5 minutes
-                if int(time.time()) % 300 == 0:
+                if int(current_time) % 300 == 0:
                     self._log_system_status()
                 
                 # Check master connection health
@@ -221,12 +316,32 @@ class CopyTradingSystem:
                     status = self.master_client.get_connection_status()
                     if not status['connected']:
                         logger.warning("Master account connection lost")
+                        self.notification_manager.send_system_alert(
+                            "Connection Lost",
+                            "Master account WebSocket connection lost. Attempting reconnection...",
+                            "WARNING"
+                        )
+                
+                # Send daily summary at market close (3:45 PM)
+                current_hour = datetime.now().hour
+                current_minute = datetime.now().minute
+                
+                if (current_hour == 15 and current_minute == 45 and 
+                    last_summary_day != current_date):
+                    
+                    self._send_daily_summary()
+                    last_summary_day = current_date
                 
                 # Sleep for a short interval
                 time.sleep(10)
                 
             except Exception as e:
                 logger.error(f"Error in system monitor: {e}")
+                self.notification_manager.send_system_alert(
+                    "System Monitor Error",
+                    f"Error in system monitoring: {str(e)}",
+                    "ERROR"
+                )
                 time.sleep(30)
     
     def _log_system_status(self):
@@ -254,6 +369,27 @@ class CopyTradingSystem:
                        f"Multiplier={status['multiplier']}")
         
         logger.info("=== END STATUS ===")
+    
+    def _send_daily_summary(self):
+        """Send daily trading summary"""
+        try:
+            uptime = datetime.now() - self.start_time if self.start_time else None
+            
+            summary_data = {
+                'total_trades': self.total_trades_processed,
+                'successful_copies': self.successful_replications,
+                'failed_copies': self.failed_replications,
+                'followers': [client.config.user_id for client in self.follower_clients],
+                'segment_breakdown': self.daily_stats['segment_breakdown'].copy(),
+                'follower_performance': self.daily_stats['follower_performance'].copy(),
+                'uptime': str(uptime).split('.')[0] if uptime else '0:00:00'
+            }
+            
+            self.notification_manager.send_daily_summary(summary_data)
+            logger.info("Daily summary sent via notifications")
+            
+        except Exception as e:
+            logger.error(f"Error sending daily summary: {e}")
     
     def shutdown(self):
         """Shutdown the copy trading system gracefully"""
@@ -348,6 +484,11 @@ def main():
     
     enabled_followers = [f for f in follower_configs if f.enabled]
     print(f"SUCCESS: Active followers: {len(enabled_followers)}")
+    
+    # Show segment information for each follower
+    for i, follower in enumerate(enabled_followers):
+        segments = ",".join(follower.enabled_segments) if hasattr(follower, 'enabled_segments') and follower.enabled_segments else "All"
+        print(f"  - Follower {i+1}: {follower.user_id} (Segments: {segments})")
     
     system_config = config_manager.get_system_config()
     print(f"SUCCESS: Paper trading mode: {system_config['paper_trading']}")

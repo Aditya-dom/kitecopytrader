@@ -12,7 +12,7 @@ load_dotenv()
 
 @dataclass
 class AccountConfig:
-    """Configuration for a trading account"""
+    """Configuration for a trading account with multi-segment support"""
     api_key: str
     api_secret: str
     access_token: str
@@ -20,6 +20,44 @@ class AccountConfig:
     multiplier: float = 1.0
     max_position_size: int = 1000
     enabled: bool = True
+    # Multi-segment trading configuration
+    enabled_segments: List[str] = None  # List of enabled segments
+    segment_multipliers: Dict[str, float] = None  # Different multipliers per segment
+    segment_limits: Dict[str, int] = None  # Different limits per segment
+    
+    def __post_init__(self):
+        # Default enabled segments if not specified
+        if self.enabled_segments is None:
+            self.enabled_segments = [
+                'NSE',      # NSE Equity
+                'BSE',      # BSE Equity  
+                'NFO',      # NSE Futures & Options
+                'MCX',      # Commodities
+                'BFO',      # BSE Futures & Options
+                'CDS'       # Currency Derivatives
+            ]
+        
+        # Default segment multipliers (same as main multiplier if not specified)
+        if self.segment_multipliers is None:
+            self.segment_multipliers = {
+                'NSE': self.multiplier,
+                'BSE': self.multiplier,
+                'NFO': self.multiplier,
+                'MCX': self.multiplier,
+                'BFO': self.multiplier,
+                'CDS': self.multiplier
+            }
+        
+        # Default segment limits with appropriate defaults for each segment
+        if self.segment_limits is None:
+            self.segment_limits = {
+                'NSE': self.max_position_size,       # Equity: Full limit
+                'BSE': self.max_position_size,       # BSE Equity: Full limit
+                'NFO': self.max_position_size // 2,  # F&O: Smaller lots due to leverage
+                'MCX': self.max_position_size // 5,  # Commodities: Much smaller due to high value
+                'BFO': self.max_position_size // 2,  # BSE F&O: Smaller lots
+                'CDS': self.max_position_size        # Currency: Full limit
+            }
 
 class SecureConfigManager:
     """
@@ -76,13 +114,14 @@ class SecureConfigManager:
         )
     
     def load_follower_configs(self) -> List[AccountConfig]:
-        """Load follower account configurations"""
+        """Load follower account configurations with segment-specific settings"""
         followers = []
         
         # Try to load from environment variables first
         follower_count = int(os.getenv('FOLLOWER_COUNT', '0'))
         
         for i in range(1, follower_count + 1):
+            # Load basic configuration
             follower = AccountConfig(
                 api_key=os.getenv(f'FOLLOWER_{i}_API_KEY', ''),
                 api_secret=self._decrypt_data(os.getenv(f'FOLLOWER_{i}_API_SECRET', '')),
@@ -93,8 +132,35 @@ class SecureConfigManager:
                 enabled=os.getenv(f'FOLLOWER_{i}_ENABLED', 'True').lower() == 'true'
             )
             
+            # Load segment-specific settings if available
+            enabled_segments_str = os.getenv(f'FOLLOWER_{i}_ENABLED_SEGMENTS', '')
+            if enabled_segments_str:
+                follower.enabled_segments = [seg.strip() for seg in enabled_segments_str.split(',')]
+            
+            # Load segment-specific multipliers
+            segment_multipliers = {}
+            segment_limits = {}
+            
+            for segment in ['NSE', 'BSE', 'NFO', 'MCX', 'BFO', 'CDS']:
+                # Load multiplier for this segment
+                multiplier_key = f'FOLLOWER_{i}_{segment}_MULTIPLIER'
+                if os.getenv(multiplier_key):
+                    segment_multipliers[segment] = float(os.getenv(multiplier_key))
+                
+                # Load limit for this segment
+                limit_key = f'FOLLOWER_{i}_{segment}_LIMIT'
+                if os.getenv(limit_key):
+                    segment_limits[segment] = int(os.getenv(limit_key))
+            
+            # Apply segment-specific settings if any were found
+            if segment_multipliers:
+                follower.segment_multipliers = segment_multipliers
+            if segment_limits:
+                follower.segment_limits = segment_limits
+            
             if self._validate_account_config(follower):
                 followers.append(follower)
+                logging.info(f"Loaded follower {i} with segments: {follower.enabled_segments}")
         
         # Try to load from config file if no environment variables found
         if not followers and os.path.exists(self.config_file):

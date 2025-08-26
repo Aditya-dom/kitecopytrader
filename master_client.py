@@ -140,7 +140,7 @@ class MasterAccountClient:
             logger.error(f"Error processing order update: {e}")
     
     def _validate_trade_data(self, trade_data: Dict[str, Any]) -> bool:
-        """Validate trade data before processing"""
+        """Validate trade data before processing with multi-segment support"""
         required_fields = ['tradingsymbol', 'exchange', 'transaction_type', 'quantity', 'product']
         
         # Check required fields
@@ -158,6 +158,38 @@ class MasterAccountClient:
         if trade_data['transaction_type'] not in ['BUY', 'SELL']:
             logger.warning(f"Invalid transaction type: {trade_data['transaction_type']}")
             return False
+        
+        # Validate exchange
+        valid_exchanges = ['NSE', 'BSE', 'NFO', 'MCX', 'BFO', 'CDS']
+        exchange = trade_data.get('exchange')
+        if exchange not in valid_exchanges:
+            logger.warning(f"Unknown exchange: {exchange}")
+            # Don't reject - might be a new exchange we haven't seen
+        
+        # Segment-specific validations
+        symbol = trade_data.get('tradingsymbol', '')
+        
+        if exchange == 'MCX':
+            # Commodity symbols validation
+            logger.info(f"Commodity trade detected: {symbol}")
+            # MCX symbols are typically like GOLD21DECFUT, CRUDEOIL21NOVFUT etc.
+            
+        elif exchange == 'NFO':
+            # NSE F&O validation
+            if 'FUT' in symbol or 'CE' in symbol or 'PE' in symbol:
+                logger.info(f"NSE F&O trade detected: {symbol}")
+            
+        elif exchange == 'BFO':
+            # BSE F&O validation
+            logger.info(f"BSE F&O trade detected: {symbol}")
+            
+        elif exchange == 'CDS':
+            # Currency validation
+            logger.info(f"Currency derivative trade detected: {symbol}")
+            
+        elif exchange in ['NSE', 'BSE']:
+            # Equity validation
+            logger.info(f"Equity trade detected on {exchange}: {symbol}")
         
         return True
     

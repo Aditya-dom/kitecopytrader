@@ -4,3 +4,8 @@ websocket-client==1.6.4
 cryptography==41.0.7
 pydantic==2.5.0
 structlog==23.2.0
+
+# Notification dependencies
+twilio==8.10.0
+aiohttp==3.9.1
+requests==2.31.0

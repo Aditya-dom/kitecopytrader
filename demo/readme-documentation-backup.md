@@ -140,10 +140,10 @@ python main.py
 ```
 
 **First run checklist:**
-- ✅ Paper trading mode should be enabled
-- ✅ Verify all account connections
-- ✅ Monitor logs for any errors
-- ✅ Test with small position sizes
+- SUCCESS: Paper trading mode should be enabled
+- SUCCESS: Verify all account connections
+- SUCCESS: Monitor logs for any errors
+- SUCCESS: Test with small position sizes
 
 ---
 

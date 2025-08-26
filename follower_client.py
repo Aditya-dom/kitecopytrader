@@ -51,20 +51,58 @@ class FollowerAccountClient:
             return False
     
     def _check_risk_limits(self, trade_data: Dict[str, Any]) -> tuple[bool, str]:
-        """Check if trade is within risk limits"""
+        """Check if trade is within risk limits for the specific segment"""
         
         # Check if account is enabled
         if not self.config.enabled:
             return False, "Account is disabled"
         
+        # Get exchange/segment from trade data
+        exchange = trade_data.get('exchange', 'NSE')
+        
+        # Check if this segment is enabled for this follower
+        if exchange not in self.config.enabled_segments:
+            return False, f"Trading disabled for segment {exchange}"
+        
         # Check daily trade limit
         if self.daily_trades_count >= self.max_daily_trades:
             return False, f"Daily trade limit reached ({self.max_daily_trades})"
         
-        # Check position size limit
-        adjusted_quantity = int(trade_data['quantity'] * self.config.multiplier)
-        if adjusted_quantity > self.config.max_position_size:
-            return False, f"Position size limit exceeded ({adjusted_quantity} > {self.config.max_position_size})"
+        # Get segment-specific multiplier and limits
+        segment_multiplier = self.config.segment_multipliers.get(exchange, self.config.multiplier)
+        segment_limit = self.config.segment_limits.get(exchange, self.config.max_position_size)
+        
+        # Check position size limit for this segment
+        adjusted_quantity = int(trade_data['quantity'] * segment_multiplier)
+        if adjusted_quantity > segment_limit:
+            return False, f"Position size limit exceeded for {exchange}: {adjusted_quantity} > {segment_limit}"
+        
+        # Additional segment-specific risk checks
+        symbol = trade_data.get('tradingsymbol', '')
+        
+        # Commodity-specific checks
+        if exchange == 'MCX':
+            # Check if it's a high-risk commodity
+            high_risk_commodities = ['CRUDEOIL', 'NATURALGAS', 'GOLD', 'SILVER']
+            if any(commodity in symbol for commodity in high_risk_commodities):
+                # Reduce limit for high-risk commodities
+                high_risk_limit = segment_limit // 2
+                if adjusted_quantity > high_risk_limit:
+                    return False, f"High-risk commodity limit exceeded: {adjusted_quantity} > {high_risk_limit}"
+        
+        # F&O specific checks
+        if exchange in ['NFO', 'BFO']:
+            # Check if it's options (higher risk)
+            if 'CE' in symbol or 'PE' in symbol:  # Call/Put options
+                options_limit = segment_limit // 2
+                if adjusted_quantity > options_limit:
+                    return False, f"Options position limit exceeded: {adjusted_quantity} > {options_limit}"
+        
+        # Currency derivatives checks
+        if exchange == 'CDS':
+            # Typically lower risk, but still check
+            if adjusted_quantity > segment_limit:
+                return False, f"Currency position limit exceeded: {adjusted_quantity} > {segment_limit}"
         
         # Check daily loss limit
         if self.daily_pnl < -self.max_daily_loss:
@@ -76,15 +114,29 @@ class FollowerAccountClient:
             time_to_wait = self.min_order_interval - (current_time - self.last_order_time)
             time.sleep(time_to_wait)
         
-        return True, "Risk check passed"
+        return True, f"Risk check passed for {exchange}"
     
-    def _calculate_quantity(self, original_quantity: int) -> int:
-        """Calculate adjusted quantity based on multiplier"""
-        adjusted_quantity = int(original_quantity * self.config.multiplier)
+    def _calculate_quantity(self, original_quantity: int, exchange: str) -> int:
+        """Calculate adjusted quantity based on segment-specific multiplier"""
+        # Get segment-specific multiplier
+        segment_multiplier = self.config.segment_multipliers.get(exchange, self.config.multiplier)
+        adjusted_quantity = int(original_quantity * segment_multiplier)
         
         # Ensure minimum quantity of 1
-        if adjusted_quantity < 1 and self.config.multiplier > 0:
+        if adjusted_quantity < 1 and segment_multiplier > 0:
             adjusted_quantity = 1
+        
+        # Special handling for different segments
+        if exchange == 'MCX':
+            # Commodities often have minimum lot sizes
+            # Ensure we don't go below minimum lot requirements
+            if adjusted_quantity > 0 and adjusted_quantity < 1:
+                adjusted_quantity = 1
+        elif exchange in ['NFO', 'BFO']:
+            # F&O has specific lot sizes - ensure we respect them
+            # Most F&O lots are multiples of specific sizes
+            if adjusted_quantity > 0 and adjusted_quantity < 1:
+                adjusted_quantity = 1
         
         return adjusted_quantity
     
@@ -147,34 +199,36 @@ class FollowerAccountClient:
         return None
     
     def replicate_trade(self, master_trade: Dict[str, Any]) -> bool:
-        """Replicate a trade from the master account"""
+        """Replicate a trade from the master account with multi-segment support"""
         
         try:
-            logger.info(f"Replicating trade for follower {self.config.user_id}: {master_trade}")
+            exchange = master_trade.get('exchange', 'NSE')
+            symbol = master_trade.get('tradingsymbol', '')
+            logger.info(f"Replicating {exchange} trade for follower {self.config.user_id}: {symbol} - {master_trade}")
             
-            # Check risk limits
+            # Check risk limits (now includes segment-specific checks)
             risk_check_passed, risk_message = self._check_risk_limits(master_trade)
             if not risk_check_passed:
                 logger.warning(f"Trade blocked by risk management: {risk_message}")
                 return False
             
-            # Calculate adjusted quantity
-            adjusted_quantity = self._calculate_quantity(master_trade['quantity'])
+            # Calculate adjusted quantity using segment-specific multiplier
+            adjusted_quantity = self._calculate_quantity(master_trade['quantity'], exchange)
             
             if adjusted_quantity <= 0:
-                logger.warning("Adjusted quantity is zero or negative, skipping trade")
+                logger.warning(f"Adjusted quantity is zero or negative for {exchange}, skipping trade")
                 return False
             
-            # Prepare order parameters
+            # Prepare order parameters with proper exchange handling
             order_params = {
                 'variety': 'regular',
-                'exchange': master_trade['exchange'],
+                'exchange': exchange,
                 'tradingsymbol': master_trade['tradingsymbol'],
                 'transaction_type': master_trade['transaction_type'],
                 'quantity': adjusted_quantity,
                 'product': master_trade['product'],
                 'order_type': 'MARKET',  # Use market orders for immediate execution
-                'tag': f"copy_trade_{master_trade.get('order_id', 'unknown')}"
+                'tag': f"copy_trade_{master_trade.get('order_id', 'unknown')}_{exchange}"
             }
             
             # Handle limit orders (optional feature)
@@ -182,20 +236,37 @@ class FollowerAccountClient:
                 order_params['order_type'] = 'LIMIT'
                 order_params['price'] = master_trade['price']
             
-            logger.info(f"Placing follower order: {order_params}")
+            # Segment-specific order parameter adjustments
+            if exchange == 'MCX':
+                # Commodities may have specific requirements
+                # MCX typically uses MIS or NRML products
+                if master_trade['product'] not in ['MIS', 'NRML']:
+                    order_params['product'] = 'MIS'  # Default to MIS for commodities
+                    
+            elif exchange in ['NFO', 'BFO']:
+                # F&O specific adjustments
+                # F&O can use MIS, NRML products
+                pass  # Keep original product type
+                
+            elif exchange == 'CDS':
+                # Currency derivatives adjustments
+                # CDS typically uses MIS or NRML
+                pass  # Keep original product type
+            
+            logger.info(f"Placing {exchange} follower order: {order_params}")
             
             # Place the order
             order_id = self._place_order_with_retry(order_params)
             
             if order_id:
-                logger.info(f"Trade replicated successfully: Order ID {order_id}")
+                logger.info(f"{exchange} trade replicated successfully: Order ID {order_id} for {symbol}")
                 return True
             else:
-                logger.error("Failed to replicate trade after all retry attempts")
+                logger.error(f"Failed to replicate {exchange} trade for {symbol} after all retry attempts")
                 return False
                 
         except Exception as e:
-            logger.error(f"Error replicating trade: {e}")
+            logger.error(f"Error replicating {exchange} trade: {e}")
             return False
     
     def get_account_status(self) -> Dict[str, Any]:
