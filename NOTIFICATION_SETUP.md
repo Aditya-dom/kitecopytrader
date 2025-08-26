@@ -22,7 +22,7 @@ TELEGRAM_BOT_TOKEN=123456789:ABCdefGhIjKlMnOpQrStUvWxYz
 TELEGRAM_CHAT_ID=123456789
 ```
 
-# 📱 WHATSAPP SETUP (via Twilio)
+# WHATSAPP SETUP (via Twilio)
 
 ## Step 1: Create Twilio Account
 1. Go to https://www.twilio.com/
@@ -50,7 +50,7 @@ TWILIO_WHATSAPP_FROM=whatsapp:+14155238886
 WHATSAPP_TO=whatsapp:+919876543210
 ```
 
-# 📧 EMAIL SETUP (Gmail Example)
+# EMAIL SETUP (Gmail Example)
 
 ## Step 1: Enable 2-Factor Authentication
 1. Go to your Google Account settings
@@ -72,7 +72,7 @@ EMAIL_PASSWORD=your_16_character_app_password
 EMAIL_TO=notifications@yourcompany.com
 ```
 
-# 🔔 WHAT YOU'LL RECEIVE
+# WHAT YOU'LL RECEIVE
 
 ## Real-Time Trade Notifications
 ```
@@ -105,12 +105,12 @@ ERROR: USER789: FAILED - Insufficient funds
 Trade for RELIANCE failed on 1 follower account(s). 
 Check logs for details.
 
-🔧 **Action Required:** Please check the system logs
+**Action Required:** Please check the system logs
 ```
 
 ## Daily Summary
 ```
-📅 **DAILY COPY TRADING SUMMARY**
+**DAILY COPY TRADING SUMMARY**
 
 **Date:** 2024-01-20
 
@@ -125,7 +125,7 @@ Check logs for details.
 • MCX: 4 trades
 • NFO: 3 trades
 
-👥 **Follower Performance:**
+**Follower Performance:**
 • USER123: 15/15 (100.0%)
 • USER456: 13/15 (86.7%)
 
@@ -146,7 +146,7 @@ Check logs for details.
 - **ERROR**: Critical system errors, connection issues
 - **All successful trades** get notified regardless of level
 
-# ⚡ QUICK TEST
+# QUICK TEST
 
 Once configured, test your notifications:
 

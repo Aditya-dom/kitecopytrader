@@ -216,13 +216,13 @@ class NotificationManager:
         alert_message += f"**Details:**\n{message}\n"
         
         if severity in ['ERROR', 'CRITICAL']:
-            alert_message += "\n🔧 **Action Required:** Please check the system logs"
+            alert_message += "\n**Action Required:** Please check the system logs"
         
         return alert_message
     
     def _format_daily_summary(self, summary_data: Dict[str, Any]) -> str:
         """Format daily summary message"""
-        message = "📅 **DAILY COPY TRADING SUMMARY**\n\n"
+        message = "**DAILY COPY TRADING SUMMARY**\n\n"
         message += f"**Date:** {datetime.now().strftime('%Y-%m-%d')}\n\n"
         
         # Trading stats
@@ -246,7 +246,7 @@ class NotificationManager:
         
         # Follower performance
         if 'follower_performance' in summary_data:
-            message += "👥 **Follower Performance:**\n"
+            message += "**Follower Performance:**\n"
             for follower_id, stats in summary_data['follower_performance'].items():
                 success_rate = (stats['successful'] / stats['total'] * 100) if stats['total'] > 0 else 0
                 message += f"• {follower_id}: {stats['successful']}/{stats['total']} ({success_rate:.1f}%)\n"

@@ -33,7 +33,7 @@ ZERODHA COPY TRADING SYSTEM - PRODUCTION READY!
 
 ---
 
-## ⚡ **QUICK START** (Production):
+## **QUICK START** (Production):
 
 ### **1. Setup (One Time):**
 ```bash
@@ -59,7 +59,7 @@ SUCCESS: **MCX** - Multi Commodity Exchange
 SUCCESS: **BFO** - BSE Futures & Options
 SUCCESS: **CDS** - Currency Derivatives Segment
 
-## 📱 **NOTIFICATION CHANNELS**:
+## **NOTIFICATION CHANNELS**:
 SUCCESS: **WhatsApp** (via Twilio)
 SUCCESS: **Telegram** (recommended)
 SUCCESS: **Email** (Gmail/SMTP)
@@ -99,7 +99,7 @@ SUCCESS: **Discord** (webhooks)
 
 ---
 
-## 🎪 **Want to See Examples?**
+## **Want to See Examples?**
 
 ### **Multi-Segment Demo:**
 ```bash
@@ -144,7 +144,7 @@ kitecopytrader/ (PRODUCTION)
 │   ├── NOTIFICATION_SETUP.md  
 │   └── READY.txt
 │
-└── 🎪 DEMO (Optional)
+    └── DEMO (Optional)
     ├── multi_segment_example.py
     ├── test_notifications.py
     ├── start.sh
@@ -153,7 +153,7 @@ kitecopytrader/ (PRODUCTION)
 
 ---
 
-## 🏆 **YOU'RE ALL SET!**
+## **YOU'RE ALL SET!**
 
 ### **For Production Trading:**
 - All demo/example files moved to `demo/` folder
@@ -171,6 +171,6 @@ kitecopytrader/ (PRODUCTION)
 
 **Simple Reality: Run `python3 main.py` and start copy trading across all segments with smart notifications!**
 
-**📱 Get WhatsApp/Telegram alerts for every trade across NSE/BSE/NFO/MCX/BFO/CDS segments instantly!**
+**Get WhatsApp/Telegram alerts for every trade across NSE/BSE/NFO/MCX/BFO/CDS segments instantly!**
 
 Happy Professional Copy Trading!

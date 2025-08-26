@@ -31,7 +31,7 @@
 - Commodity-specific risk controls (Gold, Silver, Crude Oil, etc.)
 - Options trading with enhanced risk management
 
-### 📱 Smart Notification System
+### Smart Notification System
 - **WhatsApp notifications** via Twilio API
 - **Telegram alerts** with real-time trade updates
 - **Email notifications** for audit trail
