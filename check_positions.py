@@ -18,8 +18,8 @@ def decrypt_credentials():
     """Decrypt your encrypted credentials"""
 
     # Your encrypted credentials
-    encrypted_api_key = "d8ab98b87a4841b812f8978eac7c7e518db2fe686a278c428d82e72c0d1debe795e03765348f3684"
-    encrypted_api_secret = "756afea3d59bd13fe9c9414457df6cff975f85e3b1436bbf9ae8e8afc304d3bce9725acf2f54bc07"
+    encrypted_api_key = ""
+    encrypted_api_secret = ""
 
     print("🔐 CREDENTIAL DECRYPTION")
     print("-" * 40)

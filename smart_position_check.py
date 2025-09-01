@@ -19,8 +19,8 @@ def try_decrypt_credentials():
     """Try to decrypt credentials, fallback to plain text"""
 
     # Your credentials (could be encrypted or plain text)
-    credential_api_key = "d8ab98b87a4841b812f8978eac7c7e518db2fe686a278c428d82e72c0d1debe795e03765348f3684"
-    credential_api_secret = "756afea3d59bd13fe9c9414457df6cff975f85e3b1436bbf9ae8e8afc304d3bce9725acf2f54bc07"
+    credential_api_key = ""
+    credential_api_secret = ""
 
     print("🔐 CREDENTIAL PROCESSING")
     print("-" * 40)
