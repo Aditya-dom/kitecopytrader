@@ -4,7 +4,7 @@ import time
 from typing import Dict, Any, Optional
 from kiteconnect import KiteConnect
 from kiteconnect.exceptions import KiteException
-from config import AccountConfig
+from .config import AccountConfig
 
 logger = logging.getLogger(__name__)
 

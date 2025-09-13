@@ -8,10 +8,10 @@ from typing import List, Dict, Any
 from datetime import datetime, time as dt_time
 
 # Import our modules
-from config import SecureConfigManager, setup_logging, AccountConfig
-from master_client import MasterAccountClient  
-from follower_client import FollowerAccountClient
-from notifications import NotificationManager, load_notification_config
+from .config import SecureConfigManager, setup_logging, AccountConfig
+from .master_client import MasterAccountClient  
+from .follower_client import FollowerAccountClient
+from .notifications import NotificationManager, load_notification_config
 
 logger = logging.getLogger(__name__)
 

@@ -9,3 +9,8 @@ structlog==23.2.0
 twilio==8.10.0
 aiohttp==3.9.1
 requests==2.31.0
+
+# Automated token generation dependencies
+selenium==4.15.2
+webdriver-manager==4.0.1
+pyotp==2.9.0

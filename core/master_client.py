@@ -6,7 +6,7 @@ from typing import Callable, Dict, Any, Optional
 from kiteconnect import KiteConnect, KiteTicker
 import threading
 from dataclasses import asdict
-from config import AccountConfig
+from .config import AccountConfig
 
 logger = logging.getLogger(__name__)
 
