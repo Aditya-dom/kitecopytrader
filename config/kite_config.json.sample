@@ -1,0 +1,14 @@
+{
+    "kite": {
+        "user_id": "your_user_id_here",
+        "password": "your_password_here",
+        "api_key": "your_api_key_here",
+        "api_secret": "your_api_secret_here",
+        "auth_secret": "your_auth_secret_here",
+        "access_token": "your_access_token_here"
+    },
+    "telegram": {
+        "bot_token": "your_bot_token_here",
+        "chat_id": "your_chat_id_here"
+    }
+}

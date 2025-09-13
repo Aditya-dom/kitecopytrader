@@ -98,17 +98,32 @@ kitecopytrader/
 │   ├── smart_position_check.py  # Position viewer & credential tester
 │   ├── check_positions.py       # Position checker
 │   ├── refresh_tokens.py        # Daily token refresh
-│   └── automated_token_generator.py  # Automated token generation
+│   ├── automated_token_generator.py  # Automated token generation
+│   └── config_loader.py         # Configuration loading utility
 │
 ├── 📂 scripts/                  # Setup and maintenance
 │   ├── setup.py                 # Interactive setup wizard
+│   ├── setup_config.py          # Configuration setup helper
 │   └── start_real_trading.py    # Live trading launcher
+│
+├── 📂 config/                   # Configuration templates and samples
+│   ├── kite_config.json.sample  # Simple Kite configuration template
+│   ├── complete_config.json.sample  # Complete configuration template
+│   └── automated_credentials.env.sample  # Automated system credentials
 │
 ├── 📂 docs/                     # All documentation
 │   ├── Setup_and_Use.md         # COMPLETE SETUP GUIDE - START HERE
 │   ├── PROJECT_STRUCTURE.md     # Detailed file organization
 │   ├── NOTIFICATION_SETUP.md    # Notification configuration
-│   └── AUTOMATED_TOKEN_GENERATOR.md  # Automated token generation guide
+│   ├── AUTOMATED_TOKEN_GENERATOR.md  # Automated token generation guide
+│   └── TESTING.md               # Comprehensive testing guide
+│
+├── 📂 tests/                      # Comprehensive test suite
+│   ├── test_automated_token_generator.py  # Automated system tests
+│   ├── test_core_system.py       # Core system component tests
+│   ├── test_runner.py            # Main test runner
+│   ├── test_config.py            # Test configuration and utilities
+│   └── __init__.py               # Test package initialization
 │
 └── 📂 demo/                     # Examples, tests, and utilities
 ```
@@ -129,12 +144,30 @@ pip install -r requirements.txt
 python scripts/setup.py
 ```
 
+### 2b. Alternative: JSON Configuration Setup
+```bash
+# Simple configuration (Kite + Telegram)
+python scripts/setup_config.py
+
+# Choose 'simple' for basic setup
+# Choose 'complete' for full copy trading setup
+```
+
 ### 3. Test Your Configuration
 ```bash
 python utils/smart_position_check.py
 ```
 
-### 4. Start Trading
+### 4. Test Your Setup
+```bash
+# Run quick tests to verify everything works
+python run_tests.py --quick
+
+# Run full test suite
+python run_tests.py
+```
+
+### 5. Start Trading
 ```bash
 # Paper trading (safe testing)
 PAPER_TRADING=True python run.py

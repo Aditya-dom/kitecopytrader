@@ -1,0 +1,123 @@
+{
+    "kite": {
+        "user_id": "your_user_id_here",
+        "password": "your_password_here",
+        "api_key": "your_api_key_here",
+        "api_secret": "your_api_secret_here",
+        "auth_secret": "your_auth_secret_here",
+        "access_token": "your_access_token_here"
+    },
+    "telegram": {
+        "bot_token": "your_bot_token_here",
+        "chat_id": "your_chat_id_here"
+    },
+    "master_account": {
+        "api_key": "your_master_api_key",
+        "api_secret": "your_master_api_secret",
+        "access_token": "your_master_access_token",
+        "user_id": "your_master_user_id"
+    },
+    "followers": [
+        {
+            "api_key": "follower1_api_key",
+            "api_secret": "follower1_api_secret",
+            "access_token": "follower1_access_token",
+            "user_id": "follower1_user_id",
+            "multiplier": 0.5,
+            "max_position_size": 500,
+            "enabled": true,
+            "enabled_segments": ["NSE", "BSE", "NFO"],
+            "segment_multipliers": {
+                "NSE": 0.5,
+                "BSE": 0.5,
+                "NFO": 0.3,
+                "MCX": 0.1,
+                "BFO": 0.3,
+                "CDS": 0.5
+            },
+            "segment_limits": {
+                "NSE": 500,
+                "BSE": 500,
+                "NFO": 250,
+                "MCX": 100,
+                "BFO": 250,
+                "CDS": 500
+            }
+        },
+        {
+            "api_key": "follower2_api_key",
+            "api_secret": "follower2_api_secret",
+            "access_token": "follower2_access_token",
+            "user_id": "follower2_user_id",
+            "multiplier": 0.8,
+            "max_position_size": 800,
+            "enabled": false,
+            "enabled_segments": ["NSE", "BSE"],
+            "segment_multipliers": {
+                "NSE": 0.8,
+                "BSE": 0.8,
+                "NFO": 0.4,
+                "MCX": 0.2,
+                "BFO": 0.4,
+                "CDS": 0.8
+            },
+            "segment_limits": {
+                "NSE": 800,
+                "BSE": 800,
+                "NFO": 400,
+                "MCX": 160,
+                "BFO": 400,
+                "CDS": 800
+            }
+        }
+    ],
+    "notifications": {
+        "telegram": {
+            "enabled": true,
+            "bot_token": "your_telegram_bot_token",
+            "chat_id": "your_telegram_chat_id"
+        },
+        "whatsapp": {
+            "enabled": false,
+            "twilio_account_sid": "your_twilio_account_sid",
+            "twilio_auth_token": "your_twilio_auth_token",
+            "twilio_whatsapp_from": "whatsapp:+14155238886",
+            "whatsapp_to": "whatsapp:+919876543210"
+        },
+        "email": {
+            "enabled": false,
+            "smtp_server": "smtp.gmail.com",
+            "smtp_port": 587,
+            "email_user": "your_email@gmail.com",
+            "email_password": "your_app_password",
+            "email_to": "recipient@gmail.com"
+        },
+        "discord": {
+            "enabled": false,
+            "webhook_url": "https://discord.com/api/webhooks/your_webhook_url"
+        }
+    },
+    "system": {
+        "paper_trading": true,
+        "log_level": "INFO",
+        "check_interval": 1,
+        "max_retries": 3,
+        "max_daily_trades": 100,
+        "risk_management_enabled": true,
+        "auto_token_refresh": true,
+        "market_hours_only": true
+    },
+    "risk_management": {
+        "max_daily_loss": 10000.0,
+        "max_position_value": 100000.0,
+        "high_risk_segments": ["MCX", "NFO"],
+        "position_limits": {
+            "NSE": 1000,
+            "BSE": 1000,
+            "NFO": 500,
+            "MCX": 100,
+            "BFO": 500,
+            "CDS": 1000
+        }
+    }
+}
